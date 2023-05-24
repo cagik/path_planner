@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="path_planner" type="path_planner_demo" name="path_planner_demo" args="--log_dir=." output="screen" />
+    
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find path_planner)/config/rvizConfig.rviz" output="screen" />
+</launch>

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONSTANT_H
+#define CONSTANT_H
 
 namespace constants{
 
@@ -8,3 +9,4 @@ int grid_type_obstacle = 1;
 int grid_type_free = 0;
 
 }
+#endif

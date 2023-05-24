@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(path_planner)
 
-add_definitions(-std=c++11 -w)
+
+add_definitions(-std=c++14 -w)
 set(CMAKE_CXX_FLAGS " -Wall -Wextra ${CMAKE_CXX_FLAGS}")
-set(CMAKE_BUILD_TYPE "Release")
 
 set(catkin_deps
         roscpp
@@ -13,7 +13,7 @@ set(catkin_deps
 
 find_package(catkin REQUIRED COMPONENTS
         ${catkin_deps}
-        )
+)
 
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV 3 REQUIRED)
@@ -32,11 +32,16 @@ include_directories(
         ${EIGEN3_INCLUDE_DIR}
 )
 
+add_library(${PROJECT_NAME}
+        src/frame/frame.cpp
+        src/frame/plannerBase.cpp
+        src/planner/astar.cpp
+        src/tool/KDTree/KDTree.cpp
+        )
 
-file(GLOB_RECURSE SRC_DIR_LIST "src/*.cpp" "src/*.c")
 
-add_executable(${PROJECT_NAME}_demo ${SRC_DIR_LIST})
+add_executable(${PROJECT_NAME}_demo src/main.cpp)
 
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_demo ${PROJECT_NAME})
 
-target_link_libraries(${PROJECT_NAME}_demo ${PROJECT_NAME} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
-#target_link_libraries(${PROJECT_NAME}_demo /usr/local/lib/libosqp.so)

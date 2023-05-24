@@ -21,8 +21,12 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
 
+#include "plannerBase.h"
+#include "planner/astar.h"
+
 #include "common/dataStruct.hpp"
 #include "common/constant.h"
+
 #include "tool/KDTree/KDTree.hpp"
 
 #include "ros_viz_tools/ros_viz_tools.h"
@@ -41,7 +45,7 @@ public:
     void marker_Vis();
     void LoopAction();
 
-    std::unique_ptr<ros::NodeHandle> nh_ptr_;
+    unique_ptr<ros::NodeHandle> nh_ptr_;
 
 private:
     
@@ -53,27 +57,32 @@ private:
     void initFramePara();
     void initGridMap();
 
-  
-    std::unique_ptr<ros_viz_tools::RosVizTools> marker_ptr_;
+    unique_ptr<ros_viz_tools::RosVizTools> marker_ptr_;
     string marker_frame_id_;
 
     State3D start_;
     State3D end_;
     vector<State3D> wayPoints_;
-
-    vector<vector<int>> grid_map_;
-
-    ros::Subscriber wayPoint_sub_;
-    ros::Subscriber start_sub_;
-    ros::Subscriber end_sub_;
-
-    double map_resolution_;
-
-    pointVec obstaclePoints_;
-    KDTree obstacleTree_;
-
     bool startStateFlag_;
     bool endStateFlag_;
     bool wayPointsFlag_;
+
+    vector<vector<int>> grid_map_;
+    double map_resolution_;
+    pointVec obstaclePoints_;
+    KDTree obstacleTree_;
+
+    
+    grid_map::GridMap grid_map_for_rviz_;
+    ros::Subscriber wayPoint_sub_;
+    ros::Subscriber start_sub_;
+    ros::Subscriber end_sub_;
+    ros::Publisher map_publisher_;
+
+
+    unique_ptr<plannerBase> planner_ptr_;
+
+    vector<State3D> frontEnd_Path_;
+
 };
 

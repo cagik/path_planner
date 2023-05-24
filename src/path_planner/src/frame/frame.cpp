@@ -11,6 +11,7 @@ void frame::initRosFrame()
 {
     this->nh_ptr_ = make_unique<ros::NodeHandle>("~");
     this->marker_ptr_ = make_unique<ros_viz_tools::RosVizTools>(*nh_ptr_, "markers");
+    map_publisher_ = nh_ptr_->advertise<nav_msgs::OccupancyGrid>("grid_map", 1, true);
     wayPoint_sub_ = nh_ptr_->subscribe("/clicked_point", 1, &frame::wayPointCb, this);
     start_sub_ = nh_ptr_->subscribe("/initialpose", 1, &frame::startCb, this);
     end_sub_ = nh_ptr_->subscribe("/move_base_simple/goal", 1, &frame::goalCb,this);
@@ -31,6 +32,13 @@ void frame::initGridMap()
     string image_file = "gridmap.png";
     image_dir.append("/" + image_file);
     cv::Mat img_src = cv::imread(image_dir, CV_8UC1);
+
+    grid_map_for_rviz_ = grid_map::GridMap(std::vector<std::string>{"obstacle"});
+    grid_map::Position p(0.5 * img_src.rows - 0.5, 0.5 * img_src.cols - 0.5);
+    grid_map::GridMapCvConverter::initializeFromImage(img_src, map_resolution_, grid_map_for_rviz_, p);
+    grid_map::GridMapCvConverter::addLayerFromImage<unsigned char, 1>(img_src, "obstacle", grid_map_for_rviz_, 0, 255, 1);
+    grid_map_for_rviz_.setFrameId("/map");
+
 
     int width = img_src.cols;
     int height = img_src.rows;
@@ -61,7 +69,9 @@ void frame::initGridMap()
 
 bool frame::Plan()
 {
-    //plannerB_->plan(start_, end_, map_, obstacleTree_, &referPath_);
+    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
+    planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
+    planner_ptr_->plan(start_, end_, &frontEnd_Path_);
     startStateFlag_ = false;
 }
 
@@ -134,19 +144,19 @@ void frame::marker_Vis()
     path_color.r = 1.0;
     path_color.g = 0.0;
     path_color.b = 0.0;
+    path_color.a = 1;
 
-    // visualization_msgs::Marker refer_path_marker = marker_ptr_->newLineStrip(0.2, "ref path", marker_id++, path_color, marker_frame_id_);
-    // for(size_t i = 0; i < referPath_.size() ; ++i)
-    // {
-    //     geometry_msgs::Point p;
-    //     p.x = referPath_[i].x;
-    //     p.y = referPath_[i].y;
-    //     p.z = 1.0;
-    //     refer_path_marker.points.push_back(p);
-    //     path_color.a = 1;
-    //     refer_path_marker.colors.emplace_back(path_color);
-    // }
-    // marker_.append(refer_path_marker);
+    visualization_msgs::Marker refer_path_marker = marker_ptr_->newLineStrip(0.2, "ref path", marker_id++, path_color, marker_frame_id_);
+    for(size_t i = 0; i < frontEnd_Path_.size() ; ++i)
+    {
+        geometry_msgs::Point p;
+        p.x = frontEnd_Path_[i].x;
+        p.y = frontEnd_Path_[i].y;
+        p.z = 1.0;
+        refer_path_marker.points.push_back(p);
+        refer_path_marker.colors.emplace_back(path_color);
+    }
+    marker_ptr_->append(refer_path_marker);
 
     // path_color.r = 0.063;
     // path_color.g = 0.305;
@@ -209,6 +219,11 @@ void frame::marker_Vis()
 
 void frame::LoopAction()
 {
+    ros::Time time = ros::Time::now();
+    grid_map_for_rviz_.setTimestamp(time.toNSec());
+    nav_msgs::OccupancyGrid message;
+    grid_map::GridMapRosConverter::toOccupancyGrid(grid_map_for_rviz_, "obstacle", 255, 0, message);
+    map_publisher_.publish(message);
     marker_ptr_->publish();
 }
 
@@ -219,7 +234,7 @@ void frame::wayPointCb(const geometry_msgs::PointStampedConstPtr &p)
     wayPoint.y = p->point.y;
     wayPoints_.emplace_back(wayPoint);
     // cout << "wpState x: " << wayPoint.x << "  y:" << wayPoint.y << endl;
-    // cout << "state: " << map_(int(wayPoint.x), int(wayPoint.y)) << endl;
+    // cout << "state: " << grid_map_[int(wayPoint.x)][int(wayPoint.y)] << endl;
     wayPointsFlag_ = true;
 }
 

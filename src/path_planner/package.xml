@@ -54,6 +54,8 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_export_depend>roscpp</build_export_depend>
+  <build_depend>rospack</build_depend>
+  <exec_depend>rospack</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>

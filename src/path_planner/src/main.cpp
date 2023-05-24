@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
         f.marker_Vis();
 
-        if(f.planReady()){
+        if(f.planReady_noWayPoints()){
             f.Plan();
             
         }

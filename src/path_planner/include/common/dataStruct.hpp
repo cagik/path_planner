@@ -13,3 +13,22 @@ struct State3D
     double heading{};
     double distance(const State3D &s){return hypot(this->x - s.x, this->y - s.y);}
 };
+
+enum NodeType{
+    freeGrid = 0,
+    obstacle,
+    inOpenList,
+    inCloseList
+};
+struct astarNode{
+    
+    pair<int, int> point;
+
+    int F, G, H; 
+
+    astarNode* parent; 
+
+    astarNode(pair<int, int> _point = make_pair(0, 0)):point(_point), F(0), G(0), H(0), parent(NULL)
+    {
+    }
+};

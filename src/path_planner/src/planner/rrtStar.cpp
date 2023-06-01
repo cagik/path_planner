@@ -1,9 +1,9 @@
-#include "planner/rrt.h"
+#include "planner/rrtStar.h"
 
 
 namespace planner{
 
-bool RRT::plan(const State3D &start, const State3D &end, vector<State3D> *resultPath)
+bool RRTStar::plan(const State3D &start, const State3D &end, vector<State3D> *resultPath)
 {
     start_.x = start.x;
     start_.y = start.y;
@@ -17,34 +17,36 @@ bool RRT::plan(const State3D &start, const State3D &end, vector<State3D> *result
     return true;
 }
 
-void RRT::PlannerParaInit()
+void RRTStar::PlannerParaInit()
 {
+    rewire_radius_ = 20;
     end_dist_therehold_ = 5;
     step_size_ = 3;
     max_iter_ = 10000;
 }
 
-void RRT::getPath(vector<State3D> *result)
+void RRTStar::getPath(vector<State3D> *result)
 {
 
-    rootNode_ptr_ = make_shared<RRTNode>();
+    rootNode_ptr_ = make_shared<RRTStarNode>();
     rootNode_ptr_->parent = nullptr;
     rootNode_ptr_->position = start_;
+    rootNode_ptr_->cost = 0.0;
     lastNode_ptr_ = rootNode_ptr_;
     node_ptr_vector_.push_back(rootNode_ptr_);
 
     for (int i = 0; i < max_iter_; i++)
     {
-        shared_ptr<RRTNode> n = this->getRandomNode();
+        shared_ptr<RRTStarNode> n = this->getRandomNode();
         if(n != nullptr)
         {
-            shared_ptr<RRTNode> n_nearest = this->nearest(n->position);
+            shared_ptr<RRTStarNode> n_nearest = this->nearest(n->position);
             if(n->position.distance(n_nearest->position) > this->step_size_)
             {
                 State2D new_pos = this->newPostion(n->position, n_nearest->position);
                 if(!isThereObstacleBetween(new_pos, n_nearest->position))
                 {
-                    shared_ptr<RRTNode> n_new = make_shared<RRTNode>();
+                    shared_ptr<RRTStarNode> n_new = make_shared<RRTStarNode>();
                     n_new->position = new_pos;
                     this->add(n_nearest, n_new);
                 }
@@ -56,7 +58,7 @@ void RRT::getPath(vector<State3D> *result)
         }
     }
 
-    shared_ptr<RRTNode> node;
+    shared_ptr<RRTStarNode> node;
 
     if (this->reached()) 
     {
@@ -83,14 +85,14 @@ void RRT::getPath(vector<State3D> *result)
 
 }
 
-shared_ptr<RRTNode> RRT::getRandomNode()
+shared_ptr<RRTStarNode> RRTStar::getRandomNode()
 {   
-    shared_ptr<RRTNode> randomNode;
+    shared_ptr<RRTStarNode> randomNode;
     State2D pos;
     pos.x = drand48() * this->map_width_;
     pos.y = drand48() * this->map_height_;
     if (pos.x >= 0 && pos.x <= this->map_width_ && pos.y >= 0 && pos.y <= this->map_height_) {
-        randomNode = make_shared<RRTNode>();
+        randomNode = make_shared<RRTStarNode>();
         randomNode->position = pos;
         return randomNode;
     }
@@ -98,10 +100,10 @@ shared_ptr<RRTNode> RRT::getRandomNode()
 
 }
 
-shared_ptr<RRTNode> RRT::nearest(State2D &pos)
+shared_ptr<RRTStarNode> RRTStar::nearest(State2D &pos)
 {
     float minDist = 1e9;
-    shared_ptr<RRTNode> closest = shared_ptr<RRTNode>();
+    shared_ptr<RRTStarNode> closest = shared_ptr<RRTStarNode>();
     closest = nullptr;
     for(int i = 0; i < this->node_ptr_vector_.size(); i++) {
         float dist = pos.distance(node_ptr_vector_[i]->position);
@@ -113,7 +115,7 @@ shared_ptr<RRTNode> RRT::nearest(State2D &pos)
     return closest;
 }
 
-State2D RRT::newPostion(State2D &a, State2D &b)
+State2D RRTStar::newPostion(State2D &a, State2D &b)
 {
     double theta = atan2(b.y - a.y, b.x - a.x);
     State2D new_Pos;
@@ -122,7 +124,7 @@ State2D RRT::newPostion(State2D &a, State2D &b)
     return new_Pos;
 }
 
-bool RRT::isThereObstacleBetween(State2D &a, State2D &b)
+bool RRTStar::isThereObstacleBetween(State2D &a, State2D &b)
 {
     double dist = a.distance(b);
    if(dist < 1){
@@ -151,7 +153,7 @@ bool RRT::isThereObstacleBetween(State2D &a, State2D &b)
     }
 }
 
-bool RRT::isPostionInObstacle(State2D &p)
+bool RRTStar::isPostionInObstacle(State2D &p)
 {
     if(!isPointInMap(p))
     {
@@ -168,21 +170,53 @@ bool RRT::isPostionInObstacle(State2D &p)
     }
 }
 
-bool RRT::isPointInMap(State2D &p)
+bool RRTStar::isPointInMap(State2D &p)
 {
     return p.x > 0 && p.x < this->map_width_ && p.y > 0 && p.y < this->map_height_;
 }
 
-void RRT::add(shared_ptr<RRTNode> qNearest, shared_ptr<RRTNode> qNew)
+void RRTStar::add(shared_ptr<RRTStarNode> qNearest, shared_ptr<RRTStarNode> qNew)
 {
-    qNew->parent = qNearest;
+    float cost_new_node, cost_other_parent;
+    cost_new_node = qNearest->cost + qNearest->position.distance(qNew->position);
+
+    for(auto &node : node_ptr_vector_)
+    {
+        float dist = node->position.distance(qNew->position);
+
+        cost_other_parent = node->cost + dist;
+
+        if (dist < rewire_radius_ && cost_other_parent < cost_new_node 
+            && !isThereObstacleBetween(node->position, qNew->position))
+        {
+            qNew->parent = node;
+            qNew->cost = cost_other_parent;
+        }
+        else{
+            qNew->parent = qNearest;
+            qNew->cost = cost_new_node;
+        }
+    }
     node_ptr_vector_.push_back(qNew);
     lastNode_ptr_ = qNew;
+
+    for(auto &node : node_ptr_vector_){
+        double dist = node->position.distance(lastNode_ptr_->position);
+        if(node->parent != nullptr && dist < rewire_radius_){
+            double cost_node = lastNode_ptr_->cost + dist;
+            if(cost_node < node->cost && !isThereObstacleBetween(node->position, lastNode_ptr_->position)){
+                node->parent = lastNode_ptr_;
+                node->cost = cost_node;
+            }
+        }
+    }
+
 }
 
-bool RRT::reached()
+bool RRTStar::reached()
 {
-    return lastNode_ptr_->position.distance(end_) < end_dist_therehold_;
+    shared_ptr<RRTStarNode> tmp = node_ptr_vector_.back();
+    return tmp->position.distance(end_) < end_dist_therehold_  && !isThereObstacleBetween(tmp->position, end_);
 }
 
 }

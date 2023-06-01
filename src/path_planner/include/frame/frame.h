@@ -24,6 +24,7 @@
 #include "plannerBase.h"
 #include "planner/astar.h"
 #include "planner/rrt.h"
+#include "planner/rrtStar.h"
 
 #include "common/dataStruct.hpp"
 #include "common/constant.h"

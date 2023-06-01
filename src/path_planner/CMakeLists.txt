@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(path_planner)
 
-
 add_definitions(-std=c++14 -w)
-set(CMAKE_CXX_FLAGS " -Wall -Wextra ${CMAKE_CXX_FLAGS}")
+
+#set(CMAKE_CXX_FLAGS " -Wall -Wextra ${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 set(catkin_deps
         roscpp
@@ -37,6 +39,7 @@ add_library(${PROJECT_NAME}
         src/frame/plannerBase.cpp
         src/planner/astar.cpp
         src/planner/rrt.cpp
+        src/planner/rrtStar.cpp
         src/tool/KDTree/KDTree.cpp
         )
 

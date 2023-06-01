@@ -16,6 +16,7 @@ void frame::initRosFrame()
     start_sub_ = nh_ptr_->subscribe("/initialpose", 1, &frame::startCb, this);
     end_sub_ = nh_ptr_->subscribe("/move_base_simple/goal", 1, &frame::goalCb,this);
     marker_frame_id_ = "/map";
+
 }
 
 void frame::initFramePara()
@@ -70,7 +71,8 @@ void frame::initGridMap()
 bool frame::Plan()
 {
     //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
-    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRT>();
+    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRT>();
+    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRTStar>();
     planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
     planner_ptr_->plan(start_, end_, &frontEnd_Path_);
     startStateFlag_ = false;

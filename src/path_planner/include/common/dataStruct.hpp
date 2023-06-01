@@ -4,6 +4,14 @@
 
 using namespace std;
 
+struct State2D
+{
+    State2D() = default;
+    State2D(double x, double y) : x(x), y(y){}
+    double x{};
+    double y{};
+    double distance(const State2D &s){return hypot(this->x - s.x, this->y - s.y);}
+};
 struct State3D
 {
     State3D() = default;
@@ -19,16 +27,4 @@ enum NodeType{
     obstacle,
     inOpenList,
     inCloseList
-};
-struct astarNode{
-    
-    pair<int, int> point;
-
-    int F, G, H; 
-
-    astarNode* parent; 
-
-    astarNode(pair<int, int> _point = make_pair(0, 0)):point(_point), F(0), G(0), H(0), parent(NULL)
-    {
-    }
 };

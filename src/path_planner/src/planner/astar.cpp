@@ -10,8 +10,6 @@ bool Astar::plan(const State3D &start, const State3D &end, vector<State3D>* resu
             {0, -1},            {0, 1},
             {1, -1},   {1, 0},  {1, 1}
     };
-    this->width_ = this->grid_map_.size();
-    this->height_ = this->grid_map_[0].size();
 
     this->startPoint_ = make_pair(int(start.x), int(start.y));
     this->targetPoint_ = make_pair(int(end.x), int(end.y));
@@ -65,7 +63,7 @@ astarNode* Astar::FindPath()
             int y = curY + neighbor_[k][1];
             int x = curX + neighbor_[k][0];
 
-            if(x < 0 || x >= height_ || y < 0 || y >= width_){
+            if(x < 0 || x >= this->map_height_ || y < 0 || y >= this->map_width_){
                 continue;
             }
 

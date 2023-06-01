@@ -36,6 +36,7 @@ add_library(${PROJECT_NAME}
         src/frame/frame.cpp
         src/frame/plannerBase.cpp
         src/planner/astar.cpp
+        src/planner/rrt.cpp
         src/tool/KDTree/KDTree.cpp
         )
 

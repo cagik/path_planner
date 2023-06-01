@@ -17,7 +17,8 @@ protected:
 
     vector<vector<int>> grid_map_;
     KDTree obstacleTree_;
-
+    int map_width_;
+    int map_height_;
 };
 
 

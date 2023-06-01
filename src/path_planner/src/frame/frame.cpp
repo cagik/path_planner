@@ -69,7 +69,8 @@ void frame::initGridMap()
 
 bool frame::Plan()
 {
-    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
+    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
+    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRT>();
     planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
     planner_ptr_->plan(start_, end_, &frontEnd_Path_);
     startStateFlag_ = false;

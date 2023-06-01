@@ -11,6 +11,14 @@ using namespace std;
 
 namespace planner{
 
+struct astarNode
+{
+    pair<int, int> point;
+    int F, G, H; 
+    astarNode* parent; 
+    astarNode(pair<int, int> _point = make_pair(0, 0)):point(_point), F(0), G(0), H(0), parent(NULL){}
+};
+
 
 class Astar : public plannerBase
 {
@@ -33,20 +41,16 @@ private:
 
     void GetPath(astarNode* TailNode, vector<State3D>* path);
 
-    int point2index(pair<int, int> point) {return point.first * width_ + point.second;}
+    int point2index(pair<int, int> point) {return point.first * this->map_width_ + point.second;}
 
-    pair<int, int> index2point(int index) {return pair<int, int>(int(index / width_), index % width_);}
+    pair<int, int> index2point(int index) {return pair<int, int>(int(index / this->map_width_), index % this->map_width_);}
 
     void releaseMemory();
     
-
-public:
-
-    vector<pair<int, int>> updateObsPoints;
-
 private:
     
     pair<int, int> startPoint_, targetPoint_;
+    
     vector<vector<int>> neighbor_;
 
     vector<astarNode*> PathList;
@@ -55,8 +59,7 @@ private:
 
     unordered_map<long, astarNode*> OpenDict;
 
-    int width_;
-    int height_;
+
 
 };
 }

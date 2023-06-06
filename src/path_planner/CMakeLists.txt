@@ -40,7 +40,9 @@ add_library(${PROJECT_NAME}
         src/planner/astar.cpp
         src/planner/rrt.cpp
         src/planner/rrtStar.cpp
+        src/planner/dubinsPlanner.cpp
         src/tool/KDTree/KDTree.cpp
+        src/tool/dubins/dubinsCurve.cpp
         )
 
 

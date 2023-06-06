@@ -72,7 +72,8 @@ bool frame::Plan()
 {
     //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
     //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRT>();
-    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRTStar>();
+    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRTStar>();
+    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::dubinsPlanner>();
     planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
     planner_ptr_->plan(start_, end_, &frontEnd_Path_);
     startStateFlag_ = false;
@@ -248,7 +249,7 @@ void frame::startCb(const geometry_msgs::PoseWithCovarianceStampedConstPtr &star
     start_.y = start->pose.pose.position.y;
     start_.heading = tf::getYaw(start->pose.pose.orientation);
     startStateFlag_ = true;
-    cout << "startState x: " << start_.x << "  y:" << start_.y << endl;
+    cout << "startState x: " << start_.x << "  y:" << start_.y << "  head: " << start_.heading << endl;
     std::cout << "get initial state." << std::endl;
 }
 
@@ -259,5 +260,6 @@ void frame::goalCb(const geometry_msgs::PoseStampedConstPtr &goal)
     end_.y = goal->pose.position.y;
     end_.heading = tf::getYaw(goal->pose.orientation);
     endStateFlag_ = true;
+    cout << "goalState x: " << end_.x << "  y:" << end_.y << "  head: " << end_.heading << endl;
     std::cout << "get the goal." << std::endl;
 }

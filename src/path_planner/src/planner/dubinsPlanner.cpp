@@ -5,15 +5,10 @@ namespace planner{
 bool dubinsPlanner::plan(const State3D &start, const State3D &end, vector<State3D> *resultPath)
 {
     tool::dubinsPathGenerator dpg;
+    //dpg.dubinsPlan_no_collsion(start, end, *resultPath, this->grid_map_);
+    dpg.set_Radius(10);
+    dpg.set_Step_size(0.2);
     dpg.dubinsPlan(start, end, *resultPath);
-    //reverse(resultPath->begin(), resultPath->end());
-
-    for(auto state: (*resultPath))
-    {
-        //cout << "x : " <<  state.x << " y : " << state.y << "  head:  " << state.heading << endl;
-    }
-
-    //cout << resultPath->size() << endl;
 
     return true;
 }

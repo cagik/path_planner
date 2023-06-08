@@ -6,59 +6,58 @@ namespace tool
 
 void dubinsPathGenerator::dubinsPlan(const State3D &start, const State3D &end, vector<State3D> &result)
 {
-    cout << "###############" << endl << endl;
-    cout << "start_x = " << start.x << endl << "start_y = " << start.y << endl << "start_yaw = " << start.heading <<  endl;
-    cout << "###############" << endl << endl;
-    cout << "end_x = " << end.x << endl << "end_y = " << end.y << endl << "end_yaw = " << end.heading <<  endl;
-    cout << "###############" << endl << endl;
 
     double rotate_angle = start.heading;
     double local_x_end = end.x;
     double local_y_end = end.y;
-
-    translateBack(local_x_end, local_y_end, start.x, start.y);
-
-    cout << "local x: " <<  local_x_end << " y: " <<  local_y_end  << endl;
-    cout << "###############" << endl << endl;
-
-    rotateBack(local_x_end, local_y_end, rotate_angle);
-
-    cout << cos(rotate_angle) << "  " <<  -sin(rotate_angle) << endl;
-    cout << sin(rotate_angle) << "  " <<  cos(rotate_angle) << endl;
-    cout << endl << "#################" << endl;
-
-
+    toolFunc::translateBack(local_x_end, local_y_end, start.x, start.y);
+    toolFunc::rotateBack(local_x_end, local_y_end, rotate_angle);
     double local_heading_end = end.heading - rotate_angle;
 
-    cout << "local x: " <<  local_x_end << " y: " <<  local_y_end << "  head: " <<  local_heading_end << endl;
-
-    
     double d = hypot(local_x_end, local_y_end) / radius_;
     double theta = mod2pi(atan2(local_y_end, local_x_end));
     double alpha = mod2pi(-theta);
     double beta = mod2pi(local_heading_end - theta);
 
     dubinsPath best_path = getBestPath(alpha, beta, d);
-
-    cout << endl << "#################" << endl;
-
-    cout << "d1 : " <<  best_path.d1 << " d2: " <<  best_path.d2 << "  d3: " <<  best_path.d3 << endl;
-    cout << "mode : " <<  best_path.pathType << endl;
-
     result = sampleDubinsPath(best_path);
-
-    State3D end_state = result.back();
-    cout << "end x: " <<  end_state.x << " y: " <<  end_state.y << "  head: " <<  end_state.heading << endl;
 
     for(auto &state :result)
     {
-        rotateBack(state.x, state.y, -rotate_angle);
-        translateBack(state.x, state.y, -start.x, -start.y);
+        toolFunc::rotateBack(state.x, state.y, -rotate_angle);
+        toolFunc::translateBack(state.x, state.y, -start.x, -start.y);
         state.heading += rotate_angle;
     }
     
-
 }
+
+void dubinsPathGenerator::dubinsPlan_no_collsion(const State3D &start, const State3D &end, 
+                                 vector<State3D> &result, const vector<vector<int>> &map)
+{
+
+    double rotate_angle = start.heading;
+    double local_x_end = end.x;
+    double local_y_end = end.y;
+    toolFunc::translateBack(local_x_end, local_y_end, start.x, start.y);
+    toolFunc::rotateBack(local_x_end, local_y_end, rotate_angle);
+    double local_heading_end = end.heading - rotate_angle;
+
+    double d = hypot(local_x_end, local_y_end) / radius_;
+    double theta = mod2pi(atan2(local_y_end, local_x_end));
+    double alpha = mod2pi(-theta);
+    double beta = mod2pi(local_heading_end - theta);
+
+    result = getBestPath_no_collsion(alpha, beta, d, map);
+
+    for(auto &state :result)
+    {
+        toolFunc::rotateBack(state.x, state.y, -rotate_angle);
+        toolFunc::translateBack(state.x, state.y, -start.x, -start.y);
+        state.heading += rotate_angle;
+    }
+    
+}
+
 
 dubinsPath dubinsPathGenerator::getBestPath(const double &alpha, const double &beta, const double &d)
 {
@@ -79,6 +78,63 @@ dubinsPath dubinsPathGenerator::getBestPath(const double &alpha, const double &b
         }
     }
     return best_path;
+}
+
+
+vector<State3D> dubinsPathGenerator::getBestPath_no_collsion(const double &alpha, const double &beta, 
+                                                        const double &d, const vector<vector<int>> &map)
+{
+    priority_queue<dubinsPath, vector<dubinsPath>, compare_Cost> PathList;
+    PathList.push(LSL(alpha, beta, d));
+    PathList.push(RSR(alpha, beta, d));
+    PathList.push(LSR(alpha, beta, d));
+    PathList.push(RSL(alpha, beta, d));
+    PathList.push(RLR(alpha, beta, d));
+    PathList.push(LRL(alpha, beta, d));
+
+    vector<State3D> best_path_states;
+
+    dubinsPath best_path;
+
+    while (!PathList.empty())
+    {
+        best_path = PathList.top();
+        PathList.pop();
+        if(best_path.cost = -1)
+        {
+            best_path_states.clear();
+            return best_path_states;
+        }
+        vector<State3D> best_path_states = sampleDubinsPath(best_path);
+
+        if(is_path_collsion(best_path_states, map))
+        {
+            continue;
+        }
+        else{
+            return best_path_states;
+        }
+    }
+    best_path_states.clear();
+    return best_path_states;
+}
+
+bool dubinsPathGenerator::is_path_collsion(const vector<State3D> &states, const vector<vector<int>> &map)
+{
+    for(const auto state: states)
+    {
+        int x = state.x;
+        int y = state.y;
+        if(!toolFunc::isPointInMap(x, y, map))
+        {
+            return true;
+        }
+        if(map[x][y] == 1)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 vector<State3D> dubinsPathGenerator::sampleDubinsPath(const dubinsPath& path)
@@ -150,20 +206,6 @@ State3D dubinsPathGenerator::sampleDubsinPathPoint(const double &cur_length, con
     return state_tmp;
 }
 
-
-
-void dubinsPathGenerator::translateBack(double &x, double &y, double tx, double ty)
-{
-    x -= tx;
-    y -= ty;
-}
-void dubinsPathGenerator::rotateBack(double &x, double &y, double angle)
-{
-    double new_x = x * cos(angle) + y * sin(angle);
-    double new_y = x * (-sin(angle)) + y * cos(angle);
-    x = new_x;
-    y = new_y;
-}
 
 dubinsPath dubinsPathGenerator::LSL(const double &alpha, const double &beta, const double &d)
 {

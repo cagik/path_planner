@@ -70,10 +70,35 @@ void frame::initGridMap()
 
 bool frame::Plan()
 {
-    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::Astar>();
-    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRT>();
-    //unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::RRTStar>();
-    unique_ptr<plannerBase> planner_ptr_ = make_unique<planner::dubinsPlanner>();
+    int planner_type = 0;
+    nh_ptr_->getParam("planner_type", planner_type);
+
+    cout << planner_type << endl;
+
+    unique_ptr<plannerBase> planner_ptr_;
+
+    switch (planner_type)
+    {
+    case 1:
+        planner_ptr_ = make_unique<planner::Astar>();
+        break;
+    case 2:
+        planner_ptr_ = make_unique<planner::RRT>();
+        break;
+    case 3:
+        planner_ptr_ = make_unique<planner::RRTStar>();
+        break;
+    case 4:
+        planner_ptr_ = make_unique<planner::dubinsPlanner>();
+        break;
+    case 5:
+        planner_ptr_ = make_unique<planner::RRTDubins>();
+        break;
+    default:
+        break;
+    }
+
+
     planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
     planner_ptr_->plan(start_, end_, &frontEnd_Path_);
     startStateFlag_ = false;

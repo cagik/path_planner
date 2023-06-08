@@ -43,7 +43,7 @@ void RRTStar::getPath(vector<State3D> *result)
             shared_ptr<RRTStarNode> n_nearest = this->nearest(n->position);
             if(n->position.distance(n_nearest->position) > this->step_size_)
             {
-                State2D new_pos = this->newPostion(n->position, n_nearest->position);
+                State2D new_pos = this->newPostion(n_nearest->position, n->position);
                 if(!isThereObstacleBetween(new_pos, n_nearest->position))
                 {
                     shared_ptr<RRTStarNode> n_new = make_shared<RRTStarNode>();

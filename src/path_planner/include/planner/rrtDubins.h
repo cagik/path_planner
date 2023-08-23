@@ -27,7 +27,7 @@ private:
 
 
     void PlannerParaInit();
-    void getPath(vector<State3D> *result);
+    bool getPath(vector<State3D> *result);
 
     shared_ptr<RRTDubinsNode> getRandomNode();
     shared_ptr<RRTDubinsNode> nearest(State3D &pos);

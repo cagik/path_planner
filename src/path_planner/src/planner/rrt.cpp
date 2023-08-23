@@ -19,7 +19,7 @@ bool RRT::plan(const State3D &start, const State3D &end, vector<State3D> *result
 
 void RRT::PlannerParaInit()
 {
-    end_dist_therehold_ = 5;
+    end_dist_therehold_ = 1;
     step_size_ = 3;
     max_iter_ = 10000;
 }

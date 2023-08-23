@@ -20,7 +20,7 @@ bool RRTStar::plan(const State3D &start, const State3D &end, vector<State3D> *re
 void RRTStar::PlannerParaInit()
 {
     rewire_radius_ = 20;
-    end_dist_therehold_ = 5;
+    end_dist_therehold_ = 1;
     step_size_ = 3;
     max_iter_ = 10000;
 }

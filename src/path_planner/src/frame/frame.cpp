@@ -30,7 +30,9 @@ void frame::initFramePara()
 void frame::initGridMap()
 {
     string image_dir = ros::package::getPath("path_planner");
-    string image_file = "gridmap.png";
+    string image_file;
+    nh_ptr_->getParam("image", image_file);
+    //string image_file = nh_ptr_->getParam("planner_type", imageFileName);
     image_dir.append("/" + image_file);
     cv::Mat img_src = cv::imread(image_dir, CV_8UC1);
 
@@ -73,9 +75,6 @@ bool frame::Plan()
     int planner_type = 0;
     nh_ptr_->getParam("planner_type", planner_type);
 
-    cout << planner_type << endl;
-
-    unique_ptr<plannerBase> planner_ptr_;
 
     switch (planner_type)
     {
@@ -98,9 +97,12 @@ bool frame::Plan()
         break;
     }
 
-
     planner_ptr_->setMap(this->grid_map_, this->obstacleTree_);
-    planner_ptr_->plan(start_, end_, &frontEnd_Path_);
+    if(!planner_ptr_->plan(start_, end_, &frontEnd_Path_))
+    {
+        cout << "plan fail" << endl;
+    }
+    cout << "plan finnish" << endl;
     startStateFlag_ = false;
 }
 

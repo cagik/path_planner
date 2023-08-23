@@ -19,9 +19,13 @@ bool RRTDubins::plan(const State3D &start, const State3D &end, vector<State3D> *
     end_.heading = end.heading;
 
     PlannerParaInit();
-    getPath(resultPath);
-
-    return true;
+    if(getPath(resultPath))
+    {
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 void RRTDubins::PlannerParaInit()
@@ -30,8 +34,7 @@ void RRTDubins::PlannerParaInit()
     step_size_ = 3;
     max_iter_ = 10000;
 }
-
-void RRTDubins::getPath(vector<State3D> *result)
+bool RRTDubins::getPath(vector<State3D> *result)
 {
 
     rootNode_ptr_ = make_shared<RRTDubinsNode>();
@@ -49,7 +52,6 @@ void RRTDubins::getPath(vector<State3D> *result)
             if(n->position.distance(n_nearest->position) > this->step_size_)
             {
                 State3D new_pos = this->newPostion(n_nearest->position, n->position);
-
                 if(!isThereObstacleBetween(new_pos, n_nearest->position))
                 {
                     shared_ptr<RRTDubinsNode> n_new = make_shared<RRTDubinsNode>();
@@ -69,44 +71,32 @@ void RRTDubins::getPath(vector<State3D> *result)
     if (this->reached()) 
     {
         node = this->lastNode_ptr_;
+
+        vector<State3D> Nodes_state;
+
+        while (node != nullptr) 
+        {
+            Nodes_state.push_back(node->position);
+            node = node->parent;
+        }
+        reverse(Nodes_state.begin(), Nodes_state.end());
+
+        for (size_t i = 0; i < Nodes_state.size() - 1; i++)
+        {
+            State3D from_state = Nodes_state[i];
+            State3D to_state = Nodes_state[i + 1];
+            vector<State3D> tmp_dubinsPath;
+            dubinsPathGen_ptr_->dubinsPlan(from_state, to_state, tmp_dubinsPath);
+            result->insert(result->end(), tmp_dubinsPath.begin(), tmp_dubinsPath.end());
+        }
+
+        return true;
     }
     else
     {
         node = this->nearest(this->end_);
+        return false;
     }
-
-
-    vector<State3D> Nodes_state;
-
-    while (node != nullptr) 
-    {
-        Nodes_state.push_back(node->position);
-        node = node->parent;
-    }
-    reverse(Nodes_state.begin(), Nodes_state.end());
-
-    for (size_t i = 0; i < Nodes_state.size() - 1; i++)
-    {
-        State3D from_state = Nodes_state[i];
-        State3D to_state = Nodes_state[i + 1];
-        vector<State3D> tmp_dubinsPath;
-        dubinsPathGen_ptr_->dubinsPlan(from_state, to_state, tmp_dubinsPath);
-        result->insert(result->end(), tmp_dubinsPath.begin(), tmp_dubinsPath.end());
-    }
-    
-    
-    // result->clear();
-
-    // while (node != nullptr) 
-    // {
-    //     State3D tmp;
-    //     tmp.x = node->position.x;
-    //     tmp.y = node->position.y;
-    //     result->push_back(tmp);
-    //     node = node->parent;
-    // }
-
-    // reverse(result->begin(), result->end());    
 
 }
 
